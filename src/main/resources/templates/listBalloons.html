@@ -1,0 +1,133 @@
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8">
+    <title>Balloon Order page - Welcome and choose a Balloon</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"></script>
+</head>
+<body>
+<header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand text-uppercase" href="#">Balloon Shop App</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/balloons">Balloons</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/orders">Orders</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="d-flex align-item-right">
+                <a class="nav-link" href="#">
+                    <th:block th:if="${#request.getRemoteUser() != null}"
+                              th:text="${#request.getRemoteUser()}"></th:block>
+                </a>
+                <a class="btn btn-outline-dark" href="/login" th:if="${#request.getRemoteUser() == null}">Login</a>
+                <a class="btn btn-outline-dark" href="/logout" th:if="${#request.getRemoteUser() != null}">Logout</a>
+            </div>
+        </div>
+    </nav>
+</header>
+<main>
+    <div class="container my-3">
+        <div class="row justify-content-center">
+            <div class="col-6">
+                <div th:if="${hasError}" class="error text-danger text-center">
+                    <h5 th:text="'ERROR: ' + ${error}"></h5>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-6">
+                <h2>Choose balloon color:</h2>
+                <form th:method="GET" th:action="@{/balloons}">
+                    <div class="d-flex mb-3">
+                        <input type="text" name="searchText" class="form-control"/>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h3>Sort by:</h3>
+                        <div class="form-check-group">
+                            <input type="radio" name="sortBy" value="name" class="form-check-input"/>
+                            <label class="form-check-text">By name</label>
+                        </div>
+                        <div class="form-check-group">
+                            <input type="radio" name="sortBy" value="manufacturer" class="form-check-input"/>
+                            <label class="form-check-text">By manufacturer</label>
+                        </div>
+                    </div>
+                    <div>
+                        <input type="submit" value="Submit" class="btn btn-primary"/>
+                    </div>
+                </form>
+                <form th:method="POST" th:action="@{/}" id="select-balloon-form" sec:authorize="isAuthenticated()"></form>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col" sec:authorize="isAuthenticated()"></th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Description</th>
+                            <th scope="col">Manufacturer</th>
+                            <th scope="col"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="balloon : ${balloons}" class="balloon">
+                            <td sec:authorize="isAuthenticated()">
+                                <input type="radio" th:id="'balloon-' + ${balloon.getId()}" name="balloonColor"
+                                       th:value="${balloon.name}" class="form-check-input"
+                                       form="select-balloon-form"/>
+                            </td>
+                            <td>
+                                <label th:text="${balloon.getName()}" class="form-check-label"
+                                       th:for="'balloon-' + ${balloon.getId()}"></label>
+                            </td>
+                            <td>
+                                <label th:text="${balloon.getDescription()}" class="form-check-label"
+                                       th:for="'balloon-' + ${balloon.getId()}"></label>
+                            </td>
+                            <td>
+                                <label th:text="${balloon.getManufacturer().getName()}" class="form-check-label"
+                                       th:for="'balloon-' + ${balloon.getId()}"></label>
+                            </td>
+                            <td>
+                                <form class="d-flex justify-content-end mb-0" th:method="DELETE"
+                                      th:action="@{'/balloons/delete/{id}' (id=${balloon.getId()})}">
+                                    <a th:href="@{'/balloons/edit-form/{id}' (id=${balloon.getId()})}"
+                                       sec:authorize="hasRole('ROLE_ADMIN')"
+                                       class="btn btn-sm btn-warning mx-1 edit-balloon">Edit</a>
+                                    <button type="submit" class="btn btn-sm btn-danger mx-1 delete-balloon"
+                                            sec:authorize="hasRole('ROLE_ADMIN')">Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <a th:href="@{/balloons/add-form}" class="btn btn-block btn-dark mt-3 add-new-balloon-btn"
+                   sec:authorize="hasRole('ROLE_ADMIN')">Add new balloon</a>
+            </div>
+        </div>
+        <div class="row justify-content-center" sec:authorize="isAuthenticated()">
+            <div class="col-6">
+                <input type="submit" value="Submit" class="btn btn-primary mt-3" form="select-balloon-form"/>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
